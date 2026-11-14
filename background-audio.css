@@ -1,0 +1,51 @@
+input.audio-volume,
+.find-bar input.audio-volume {
+  box-sizing: border-box;
+  flex: 0 0 84px;
+  align-self: center;
+  width: 84px;
+  min-width: 84px;
+  max-width: 84px;
+  height: 28px;
+  margin: 0 3px 0 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  accent-color: cyan;
+  cursor: pointer;
+}
+
+input.audio-volume:focus-visible {
+  outline: 2px solid cyan;
+  outline-offset: 2px;
+}
+
+.audio-toolbar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  box-sizing: border-box;
+  height: 38px;
+  padding: 2px 4px;
+  background: rgba(2, 9, 29, 0.96);
+}
+
+.audio-status {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+@media print {
+  .audio-toolbar,
+  input.audio-volume {
+    display: none;
+  }
+}
