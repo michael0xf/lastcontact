@@ -126,6 +126,8 @@
     .find-bar [data-prev-page], .find-bar [data-next-page] { font-size: 1.6em; line-height: 1; padding-top: 0; padding-bottom: 0; }
     .find-bar input:focus, .find-bar button:focus { outline: 2px solid cyan; outline-offset: 2px; }
     .find-bar button:hover { background: #171c20; }
+    .find-bar .audio-volume { flex: 0 0 auto; align-self: center; width: clamp(44px, 8vw, 84px); height: 28px; margin: 0 3px 0 0; padding: 0; border: 0; background: transparent; accent-color: cyan; cursor: pointer; }
+    .audio-status { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
     @media print { body { background: #fff; color: #000; } .fractal-background { display: none; } .page-shell { background: transparent; } .document-scroll { padding: 0; } .document-scroll::after { display: none; } .toolbar-row { display: none !important; } .doc-page { break-after: auto; page-break-after: auto; border-top: 0 !important; margin-bottom: 0; } .doc-page:last-child { break-after: auto; page-break-after: auto; } .page-label { display: none; } }
     @media (max-width: 700px) { body { font-size: 14px; } .document-scroll { padding: 6px; } .doc-page { margin-bottom: 8px; } .find-bar { gap: 2px; padding: 2px; } .find-bar button { min-width: 36px; height: 32px; padding: 5px 4px; } .find-bar [data-prev-page], .find-bar [data-next-page] { padding-top: 0; padding-bottom: 0; } }
     @media print { .image-block { width: 100%; margin-left: 0; transform: none; } }
@@ -138,6 +140,8 @@
 <div class="toolbar-row">
 <div class="toolbar-cell">
 <form class="find-bar" data-find-form>
+  <input class="audio-volume" data-audio-volume type="range" min="0" max="100" step="1" value="0" aria-label="Громкость музыки и дождя" aria-valuetext="0%" aria-describedby="audio-status" title="Музыка и дождь: 0% (выключено)">
+  <span class="audio-status" id="audio-status" role="status" aria-live="polite"></span>
   <button type="button" data-prev-page title="previous page" aria-label="previous page">⎗</button>
   <button type="button" data-half-page-up title="three quarter screen up" aria-label="three quarter screen up">↑▭</button>
   <button type="button" data-find-up title="find up" aria-label="find up">↑🔍</button>
@@ -153,7 +157,7 @@
 <div class="document-scroll" data-document-scroll>
 <footer class="site-footer" aria-label="Дополнительные тексты">
   <span class="site-footer-links"><a href="michael0xf.html">Привет, чебурашка!</a></span>
-  <span class="viewer-version" data-viewer-version aria-label="Версия просмотрщика">v26</span>
+  <span class="viewer-version" data-viewer-version aria-label="Версия просмотрщика">v28</span>
 </footer>
 <main data-pages-root>
 <section class="doc-page" id="page-1" data-page="1">
@@ -165,7 +169,7 @@
 <time class="document-modified" data-document-modified datetime="2026-08-21T07:00:44-03:00" aria-label="Дата и время изменения текста">21.08.2026, 07:00</time>
 <footer class="site-footer site-footer-bottom" aria-label="Дополнительные тексты">
   <span class="site-footer-links"><a href="michael0xf.html">Привет, чебурашка!</a></span>
-  <span class="viewer-version" data-viewer-version aria-label="Версия просмотрщика">v25</span>
+  <span class="viewer-version" data-viewer-version aria-label="Версия просмотрщика">v28</span>
 </footer>
 </div>
 </div>
@@ -1197,6 +1201,94 @@
         window.addEventListener("load", openHashPage, { once: true });
       })
       .catch(renderError);
+  })();
+</script>
+<audio data-background-audio src="ten_drop_piano_original_rain_120s_160kbps.mp3" preload="none" playsinline></audio>
+<script>
+  (() => {
+    const slider = document.querySelector("[data-audio-volume]");
+    const audio = document.querySelector("[data-background-audio]");
+    const status = document.getElementById("audio-status");
+    let context;
+    let gain;
+    let source;
+    let playbackRequest = 0;
+
+    const writeVolumeToUrl = () => {
+      const url = new URL(window.location.href);
+      url.searchParams.set("volume", slider.value);
+      history.replaceState(history.state, "", url.href);
+    };
+
+    const reportError = () => {
+      audio.pause();
+      audio.loop = false;
+      slider.value = "0";
+      slider.setAttribute("aria-valuetext", "0%");
+      writeVolumeToUrl();
+      slider.title = "Не удалось включить звук. Попробуйте передвинуть бегунок ещё раз.";
+      status.textContent = slider.title;
+    };
+
+    const updateVolume = () => {
+      const request = ++playbackRequest;
+      const level = Number(slider.value) / 100;
+      slider.setAttribute("aria-valuetext", `${slider.value}%`);
+      slider.title = `Музыка и дождь: ${slider.value}%${level === 0 ? " (выключено)" : ""}`;
+      status.textContent = "";
+      writeVolumeToUrl();
+      audio.loop = level > 0;
+
+      if (level === 0) {
+        if (gain) gain.gain.setTargetAtTime(0, context.currentTime, 0.02);
+        audio.pause();
+        if (audio.readyState > 0) audio.currentTime = 0;
+        return;
+      }
+
+      try {
+        if (!context) {
+          const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+          if (!AudioContextClass) throw new Error("Web Audio unavailable");
+          context = new AudioContextClass();
+          gain = context.createGain();
+          gain.gain.value = 0;
+          source = context.createMediaElementSource(audio);
+          source.connect(gain);
+          gain.connect(context.destination);
+        }
+        gain.gain.setTargetAtTime(level, context.currentTime, 0.02);
+        const resume = context.resume();
+        const play = audio.play();
+        Promise.all([resume, play]).catch((error) => {
+          if (request !== playbackRequest || error.name === "AbortError") return;
+          if (error.name === "NotAllowedError") {
+            status.textContent = "Нажмите на страницу, чтобы включить звук.";
+            return;
+          }
+          if (Number(slider.value) > 0) reportError();
+        });
+      } catch (error) {
+        reportError();
+      }
+    };
+
+    const readVolumeFromUrl = () => {
+      const value = Number(new URL(window.location.href).searchParams.get("volume"));
+      slider.value = String(Number.isFinite(value) ? Math.round(Math.max(0, Math.min(100, value))) : 0);
+      updateVolume();
+    };
+
+    slider.addEventListener("input", updateVolume);
+    const startAfterGesture = () => {
+      if (Number(slider.value) > 0 && (audio.paused || context?.state !== "running")) {
+        updateVolume();
+      }
+    };
+    document.addEventListener("click", startAfterGesture);
+    document.addEventListener("keydown", startAfterGesture);
+    window.addEventListener("popstate", readVolumeFromUrl);
+    readVolumeFromUrl();
   })();
 </script>
 </body>
