@@ -38,10 +38,29 @@
   let playbackRequest = 0;
   let pageReady = false;
 
+  const siteDirectory = new URL(".", window.location.href).pathname;
+  const updateLinkVolume = (link) => {
+    if (!link || link.hasAttribute("download")) return;
+    const href = link.getAttribute("href");
+    if (!href) return;
+    let url;
+    try {
+      url = new URL(href, document.baseURI);
+    } catch (error) {
+      return;
+    }
+    if (url.protocol !== window.location.protocol || url.origin !== window.location.origin) return;
+    if (!url.pathname.startsWith(siteDirectory)) return;
+    if (!url.pathname.endsWith("/") && !/\.html?$/i.test(url.pathname)) return;
+    url.searchParams.set("volume", slider.value);
+    if (link.href !== url.href) link.href = url.href;
+  };
+
   const writeVolumeToUrl = () => {
     const url = new URL(window.location.href);
     url.searchParams.set("volume", slider.value);
     history.replaceState(history.state, "", url.href);
+    document.querySelectorAll("a[href]").forEach(updateLinkVolume);
   };
 
   const reportError = () => {
@@ -116,6 +135,12 @@
   };
   document.addEventListener("click", startAfterGesture);
   document.addEventListener("keydown", startAfterGesture);
+  const prepareLink = (event) => {
+    updateLinkVolume(event.target.closest?.("a[href]"));
+  };
+  for (const type of ["pointerdown", "click", "auxclick", "contextmenu", "focusin", "keydown"]) {
+    document.addEventListener(type, prepareLink, true);
+  }
   window.addEventListener("popstate", readVolumeFromUrl);
   readVolumeFromUrl();
 
