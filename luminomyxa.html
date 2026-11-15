@@ -20,8 +20,10 @@
     (() => {
       const url = new URL(location.href);
       if (url.search) {
+        const volume = url.searchParams.get("volume");
         url.search = "";
-        history.replaceState({}, "", url);
+        if (volume !== null) url.searchParams.set("volume", volume);
+        history.replaceState(history.state, "", url);
       }
     })();
   </script>
@@ -121,7 +123,7 @@
 <div class="document-scroll" data-document-scroll>
 <footer class="site-footer" aria-label="Дополнительные тексты">
   <span class="site-footer-links"><a href="michael0xf.html">Привет, чебурашка!</a></span>
-  <span class="viewer-version" data-viewer-version aria-label="Версия просмотрщика">v29</span>
+  <span class="viewer-version" data-viewer-version aria-label="Версия просмотрщика">v30</span>
 </footer>
 <main data-pages-root>
 <section class="doc-page" id="page-1" data-page="1">
@@ -133,7 +135,7 @@
 <time class="document-modified" data-document-modified datetime="2026-08-15T13:43:55-03:00" aria-label="Дата и время изменения текста">15.08.2026, 13:43</time>
 <footer class="site-footer site-footer-bottom" aria-label="Дополнительные тексты">
   <span class="site-footer-links"><a href="michael0xf.html">Привет, чебурашка!</a></span>
-  <span class="viewer-version" data-viewer-version aria-label="Версия просмотрщика">v29</span>
+  <span class="viewer-version" data-viewer-version aria-label="Версия просмотрщика">v30</span>
 </footer>
 </div>
 </div>
