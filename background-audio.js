@@ -77,7 +77,7 @@
     const request = ++playbackRequest;
     const level = Number(slider.value) / 100;
     slider.setAttribute("aria-valuetext", `${slider.value}%`);
-    slider.title = `Музыка и дождь: ${slider.value}%${level === 0 ? " (выключено)" : ""}`;
+    slider.title = `Музыка и дождь (с) Mikhail Kravchenko: ${slider.value}%${level === 0 ? " (выключено)" : ""}`;
     status.textContent = "";
     writeVolumeToUrl();
     audio.loop = level > 0;
