@@ -32,8 +32,11 @@
     .document-scroll { padding: 8px; box-sizing: border-box; }
     main { max-width: 1180px; margin: 0 auto; }
     .document-scroll::after { content: ""; display: block; height: calc(100vh - 3rem); }
-    .site-footer { position: relative; z-index: 1; display: flex; justify-content: flex-end; width: fit-content; max-width: min(760px, calc(100% - 16px)); margin: 0 auto 10px; padding: 6px 10px; box-sizing: border-box; color: cyan; font-size: 0.875em; line-height: 1.55; }
-    .site-footer .viewer-version { flex: 0 0 auto; padding-right: 0.25ch; white-space: nowrap; }
+    .site-footer { position: relative; z-index: 1; display: flex; align-items: center; gap: 10px; width: fit-content; max-width: min(760px, calc(100% - 16px)); margin: 0 auto 10px; padding: 6px 10px; box-sizing: border-box; color: cyan; font-size: 0.875em; line-height: 1.55; text-align: center; }
+    .site-footer-links { min-width: 0; text-align: center; }
+    .site-footer a { color: cyan; text-underline-offset: 0.2em; }
+    .site-footer .separator { padding: 0 0.6ch; opacity: 0.55; }
+    .site-footer .viewer-version { flex: 0 0 auto; margin-left: auto; padding-right: 0.25ch; white-space: nowrap; }
     .image-block { width: calc(100vw - 16px); margin: 8px 0 10px 50%; transform: translateX(-50%); }
     .image-block img { display: block; width: 100%; max-width: 100%; height: auto; margin: 0 auto; border: 0; }
     .image-block.fit-height img { width: auto; max-width: 100%; object-fit: contain; }
@@ -78,8 +81,15 @@
       </form>
     </div>
     <div class="document-scroll">
-      <footer class="site-footer" aria-label="Версия просмотрщика">
-        <span class="viewer-version" data-viewer-version>v33</span>
+      <footer class="site-footer" aria-label="Ссылки">
+        <span class="site-footer-links">
+          <a href="./">«Последний контакт»</a>
+          <span class="separator" aria-hidden="true">·</span>
+          <a href="sekt.txt">Текстовая версия эссе</a>
+          <span class="separator" aria-hidden="true">·</span>
+          <a href="michael0xf.html">Привет, чебурашка!</a>
+        </span>
+        <span class="viewer-version" data-viewer-version>v34</span>
       </footer>
       <main data-pages-root>
         <section class="doc-page" id="page-1" data-page="1">
@@ -88,11 +98,18 @@
         </section>
       </main>
       <time class="document-modified" data-document-modified datetime="2026-08-20T20:05:25-03:00" aria-label="Дата и время изменения текста">20.08.2026, 20:05</time>
-      <footer class="site-footer site-footer-bottom" aria-label="Версия просмотрщика">
-        <span class="viewer-version" data-viewer-version>v33</span>
+      <footer class="site-footer site-footer-bottom" aria-label="Ссылки">
+        <span class="site-footer-links">
+          <a href="./">«Последний контакт»</a>
+          <span class="separator" aria-hidden="true">·</span>
+          <a href="sekt.txt">Текстовая версия эссе</a>
+          <span class="separator" aria-hidden="true">·</span>
+          <a href="michael0xf.html">Привет, чебурашка!</a>
+        </span>
+        <span class="viewer-version" data-viewer-version>v34</span>
       </footer>
     </div>
   </div>
-  <script src="text-viewer.js?v=33&amp;cache=timestamp-fix"></script>
+  <script src="text-viewer.js?v=34&amp;cache=timestamp-fix"></script>
 </body>
 </html>

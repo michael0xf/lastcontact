@@ -2,7 +2,7 @@
   "use strict";
 
   const COLOR_COUNT = 7;
-  const VIEWER_VERSION = 33;
+  const VIEWER_VERSION = 34;
   let started = false;
 
   const styleText = `
