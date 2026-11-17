@@ -39,6 +39,18 @@
   let pageReady = false;
 
   const siteDirectory = new URL(".", window.location.href).pathname;
+  const setUrlVolume = (url) => {
+    const query = url.hash.slice(1);
+    const pageMatch = /(?:^|-)page-(\d+)(?=-|$)/.exec(query);
+    const lineMatch = /(?:^|-)line-(\d+)(?=-|$)/.exec(query);
+    const parts = [];
+    if (pageMatch) parts.push(`page-${pageMatch[1]}`);
+    if (lineMatch) parts.push(`line-${lineMatch[1]}`);
+    parts.push(`volume-${slider.value}`);
+    url.hash = parts.join("-");
+    url.search = "";
+  };
+
   const updateLinkVolume = (link) => {
     if (!link || link.hasAttribute("download")) return;
     const href = link.getAttribute("href");
@@ -52,14 +64,14 @@
     if (url.protocol !== window.location.protocol || url.origin !== window.location.origin) return;
     if (!url.pathname.startsWith(siteDirectory)) return;
     if (!url.pathname.endsWith("/") && !/\.html?$/i.test(url.pathname)) return;
-    url.searchParams.set("volume", slider.value);
+    setUrlVolume(url);
     if (link.href !== url.href) link.href = url.href;
   };
 
   const writeVolumeToUrl = () => {
     const url = new URL(window.location.href);
-    url.searchParams.set("volume", slider.value);
-    history.replaceState(history.state, "", url.href);
+    setUrlVolume(url);
+    if (url.href !== window.location.href) history.replaceState(history.state, "", url.href);
     document.querySelectorAll("a[href]").forEach(updateLinkVolume);
   };
 
@@ -73,13 +85,14 @@
     status.textContent = slider.title;
   };
 
-  const updateVolume = () => {
+  const updateVolume = (writeUrl = true) => {
     const request = ++playbackRequest;
     const level = Number(slider.value) / 100;
     slider.setAttribute("aria-valuetext", `${slider.value}%`);
     slider.title = `Mikhail Kravchenko "Музыка и Дождь": ${slider.value}%${level === 0 ? " (выключено)" : ""}`;
     status.textContent = "";
-    writeVolumeToUrl();
+    if (writeUrl) writeVolumeToUrl();
+    else document.querySelectorAll("a[href]").forEach(updateLinkVolume);
     audio.loop = level > 0;
 
     if (level === 0) {
@@ -122,9 +135,11 @@
   };
 
   const readVolumeFromUrl = () => {
-    const value = Number(new URL(window.location.href).searchParams.get("volume"));
+    const query = new URL(window.location.href).hash.slice(1);
+    const volumeMatch = /(?:^|-)volume-(\d+)(?=-|$)/.exec(query);
+    const value = volumeMatch ? Number(volumeMatch[1]) : 0;
     slider.value = String(Number.isFinite(value) ? Math.round(Math.max(0, Math.min(100, value))) : 0);
-    updateVolume();
+    updateVolume(false);
   };
 
   slider.addEventListener("input", updateVolume);
@@ -142,6 +157,7 @@
     document.addEventListener(type, prepareLink, true);
   }
   window.addEventListener("popstate", readVolumeFromUrl);
+  window.addEventListener("hashchange", readVolumeFromUrl);
   readVolumeFromUrl();
 
   const afterPageLoad = () => {

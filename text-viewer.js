@@ -2,7 +2,7 @@
   "use strict";
 
   const COLOR_COUNT = 7;
-  const VIEWER_VERSION = 29;
+  const VIEWER_VERSION = 32;
   let started = false;
 
   const styleText = `
@@ -199,6 +199,12 @@
 
     started = true;
     ensureStyles();
+
+    const url = new URL(global.location.href);
+    if (url.search) {
+      url.search = "";
+      history.replaceState(history.state, "", url.href);
+    }
 
     const textUrl = options.textUrl || document.body.dataset.textUrl || "";
     let pages = [];
@@ -429,18 +435,25 @@
     };
 
     const locationFromHash = () => {
-      const match = /^#page-(\d+)(?:-line-(\d+))?$/u.exec(global.location.hash);
-      return match
-        ? { pageNumber: match[1], lineNumber: match[2] ? Number(match[2]) : null }
-        : null;
+      const query = global.location.hash.slice(1);
+      const pageMatch = /(?:^|-)page-(\d+)(?=-|$)/.exec(query);
+      const lineMatch = /(?:^|-)line-(\d+)(?=-|$)/.exec(query);
+      if (!pageMatch && !lineMatch) return null;
+      return {
+        pageNumber: pageMatch ? Number(pageMatch[1]) : null,
+        lineNumber: lineMatch ? Number(lineMatch[1]) : null
+      };
     };
 
     const replacePageHash = (page, lineNumber = null) => {
       const pageNumber = screenPageNumber();
-      const hash = Number.isInteger(lineNumber) && lineNumber > 0
-        ? `#page-${pageNumber}-line-${lineNumber}`
-        : `#page-${pageNumber}`;
-      if (global.location.hash !== hash) history.replaceState({}, "", hash);
+      const volumeMatch = /(?:^|-)volume-(\d+)(?=-|$)/.exec(global.location.hash.slice(1));
+      const parts = [`page-${pageNumber}`];
+      if (Number.isInteger(lineNumber) && lineNumber > 0) parts.push(`line-${lineNumber}`);
+      if (volumeMatch) parts.push(`volume-${volumeMatch[1]}`);
+      const url = new URL(global.location.href);
+      url.hash = parts.join("-");
+      if (url.href !== global.location.href) history.replaceState(history.state, "", url.href);
     };
 
     const pageIndexFromHash = () => {

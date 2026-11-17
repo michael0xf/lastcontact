@@ -20,10 +20,8 @@
     (() => {
       const url = new URL(location.href);
       if (url.search) {
-        const volume = url.searchParams.get("volume");
         url.search = "";
-        if (volume !== null) url.searchParams.set("volume", volume);
-        history.replaceState(history.state, "", url);
+        history.replaceState(history.state, "", url.href);
       }
     })();
   </script>
@@ -100,7 +98,7 @@
     @media (max-width: 700px) { .image-block { width: calc(100vw - 12px); margin-top: 8px; margin-bottom: 10px; } }
   </style>
   <link rel="stylesheet" href="background-audio.css?v=29">
-  <script src="background-audio.js?v=32" defer></script>
+  <script src="background-audio.js?v=35" defer></script>
 </head>
 <body>
 <canvas class="fractal-background" data-fractal-background aria-hidden="true"></canvas>
@@ -123,7 +121,7 @@
 <div class="document-scroll" data-document-scroll>
 <footer class="site-footer" aria-label="Дополнительные тексты">
   <span class="site-footer-links"><a href="michael0xf.html">Привет, чебурашка!</a></span>
-  <span class="viewer-version" data-viewer-version aria-label="Версия просмотрщика">v30</span>
+  <span class="viewer-version" data-viewer-version aria-label="Версия просмотрщика">v33</span>
 </footer>
 <main data-pages-root>
 <section class="doc-page" id="page-1" data-page="1">
@@ -135,7 +133,7 @@
 <time class="document-modified" data-document-modified datetime="2026-08-15T13:43:55-03:00" aria-label="Дата и время изменения текста">15.08.2026, 13:43</time>
 <footer class="site-footer site-footer-bottom" aria-label="Дополнительные тексты">
   <span class="site-footer-links"><a href="michael0xf.html">Привет, чебурашка!</a></span>
-  <span class="viewer-version" data-viewer-version aria-label="Версия просмотрщика">v30</span>
+  <span class="viewer-version" data-viewer-version aria-label="Версия просмотрщика">v33</span>
 </footer>
 </div>
 </div>
@@ -695,35 +693,25 @@
     };
 
     const locationFromHash = () => {
-      const pageMatch = /^#page-(\d+)(?:-(?:line|paragraph)-(\d+))?$/.exec(location.hash);
-      if (pageMatch) {
-        return {
-          pageNumber: pageMatch[1],
-          lineNumber: pageMatch[2] ? Number(pageMatch[2]) : null
-        };
-      }
-
-      const lineMatch = /^#(?:line|paragraph)-(\d+)$/.exec(location.hash);
-      if (lineMatch) {
-        return {
-          pageNumber: null,
-          lineNumber: Number(lineMatch[1])
-        };
-      }
-      return null;
+      const query = location.hash.slice(1);
+      const pageMatch = /(?:^|-)page-(\d+)(?=-|$)/.exec(query);
+      const lineMatch = /(?:^|-)line-(\d+)(?=-|$)/.exec(query);
+      if (!pageMatch && !lineMatch) return null;
+      return {
+        pageNumber: pageMatch ? Number(pageMatch[1]) : null,
+        lineNumber: lineMatch ? Number(lineMatch[1]) : null
+      };
     };
 
     const replacePageHash = (page, lineNumber = null) => {
-      const validLine = Number.isInteger(lineNumber) && lineNumber > 0
-        ? lineNumber
-        : null;
       const pageNumber = screenPageNumber();
-      const hash = validLine
-        ? `#page-${pageNumber}-line-${validLine}`
-        : `#page-${pageNumber}`;
-      if (location.hash !== hash) {
-        history.replaceState({}, "", hash);
-      }
+      const volumeMatch = /(?:^|-)volume-(\d+)(?=-|$)/.exec(location.hash.slice(1));
+      const parts = [`page-${pageNumber}`];
+      if (Number.isInteger(lineNumber) && lineNumber > 0) parts.push(`line-${lineNumber}`);
+      if (volumeMatch) parts.push(`volume-${volumeMatch[1]}`);
+      const url = new URL(location.href);
+      url.hash = parts.join("-");
+      if (url.href !== location.href) history.replaceState(history.state, "", url.href);
     };
 
     const pageIndexFromHash = () => {
