@@ -135,7 +135,12 @@
   };
 
   const readVolumeFromUrl = () => {
-    const query = new URL(window.location.href).hash.slice(1);
+    const url = new URL(window.location.href);
+    if (url.search) {
+      url.search = "";
+      history.replaceState(history.state, "", url.href);
+    }
+    const query = url.hash.slice(1);
     const volumeMatch = /(?:^|-)volume-(\d+)(?=-|$)/.exec(query);
     const value = volumeMatch ? Number(volumeMatch[1]) : 0;
     slider.value = String(Number.isFinite(value) ? Math.round(Math.max(0, Math.min(100, value))) : 0);
